@@ -72,7 +72,12 @@ streamlit run app1.py
 
 ## 📷 Capturas de Tela
 
-> ⚙️ (Adicione aqui prints do app rodando com gráficos e a tabela de trades para mostrar como ele funciona visualmente.)
+
+![Captura de tela 2025-06-05 115422](https://github.com/user-attachments/assets/024dae71-04af-4190-90aa-114f00149deb)
+![Patrimônio](https://github.com/user-attachments/assets/a9de5f9f-ffe1-43a2-a79a-f69adfc07f01)
+![Drawdown](https://github.com/user-attachments/assets/545b8dd6-51e6-4fb4-b302-607969ab2232)
+![Histograma_PL](https://github.com/user-attachments/assets/78059a51-4deb-4704-9926-100c523affc4)
+
 
 ---
 
