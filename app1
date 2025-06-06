@@ -11,3 +11,55 @@ from openpyxl import load_workbook
 # -------------------------------------------------------
 ARQUIVO_CSV = 'trades.csv'
 ARQUIVO_XLSX = 'trades.xlsx'
+
+# -------------------------------------------------------
+# MÓDULO 1: Funções de Cálculo de Colunas Derivadas
+# -------------------------------------------------------
+def calcular_colunas_derivadas(df):
+    """
+    Recebe um DataFrame com as colunas mínimas:
+      - 'Data' (datetime)
+      - 'Ativo' (str)
+      - 'Contratos' (int)
+      - 'Lucro_Liquido' (float)
+    Gera e retorna o DataFrame com colunas adicionais:
+      - SaldoAcumulado: soma cumulativa de 'Lucro_Liquido'
+      - PicoAcumulado: máximo cumulativo de 'SaldoAcumulado'
+      - Drawdown: ((SaldoAcumulado - PicoAcumulado) / PicoAcumulado) * 100
+      - Resultado (%): (Lucro_Liquido / SaldoAnterior) * 100
+    """
+    df = df.copy()
+
+    # 1) Garante tipo correto para Lucro_Liquido
+    if 'Lucro_Liquido' not in df.columns:
+        df['Lucro_Liquido'] = 0.0
+    df['Lucro_Liquido'] = df['Lucro_Liquido'].astype(float)
+
+    # 2) SaldoAcumulado: soma cumulativa de Lucro_Liquido
+    df['SaldoAcumulado'] = df['Lucro_Liquido'].cumsum()
+
+    # 3) PicoAcumulado: máximo cumulativo de SaldoAcumulado
+    df['PicoAcumulado'] = df['SaldoAcumulado'].cummax()
+
+    # 4) Drawdown (%) = (SaldoAcumulado - PicoAcumulado) / PicoAcumulado * 100
+    df['Drawdown'] = (
+        (df['SaldoAcumulado'] - df['PicoAcumulado']) /
+        df['PicoAcumulado'].replace(0, np.nan)
+    ) * 100
+    df['Drawdown'] = df['Drawdown'].fillna(0)
+
+    # 5) Resultado (%) = (Lucro_Liquido / SaldoAnterior) * 100
+    #    "SaldoAnterior" é "SaldoAcumulado" deslocado uma linha para baixo
+    df['SaldoAnterior'] = df['SaldoAcumulado'].shift(1).fillna(0)
+    # Evita divisão por zero: se SaldoAnterior == 0, define Resultado = 0
+    df['Resultado (%)'] = np.where(
+        df['SaldoAnterior'] != 0,
+        (df['Lucro_Liquido'] / df['SaldoAnterior']) * 100,
+        0.0
+    )
+
+    # Remove a coluna auxiliar 'SaldoAnterior'
+    df.drop(columns=['SaldoAnterior'], inplace=True)
+
+    return df
+
