@@ -63,3 +63,68 @@ def calcular_colunas_derivadas(df):
 
     return df
 
+# -------------------------------------------------------
+# MÓDULO 2: Carregar / Salvar Dados e Formatar Excel
+# -------------------------------------------------------
+def carregar_dados():
+    """
+    Lê o CSV 'trades.csv', converte 'Data' para datetime e
+    recria as colunas derivadas. Se o arquivo não existir,
+    retorna um DataFrame vazio com as colunas base definidas.
+    """
+    if os.path.exists(ARQUIVO_CSV):
+        df = pd.read_csv(
+            ARQUIVO_CSV,
+            parse_dates=['Data'],
+            dayfirst=True  # interpreta 'DD/MM/YYYY'
+        )
+        # Garante que 'Contratos' seja int e 'Ativo' seja string
+        df['Contratos'] = df['Contratos'].astype(int)
+        df['Ativo'] = df['Ativo'].astype(str)
+        df['Lucro_Liquido'] = df['Lucro_Liquido'].astype(float)
+    else:
+        # Colunas base: Data, Ativo, Contratos, Lucro_Liquido
+        df = pd.DataFrame(columns=['Data', 'Ativo', 'Contratos', 'Lucro_Liquido'])
+
+    # Recria as colunas derivadas (SaldoAcumulado, Drawdown, Resultado)
+    df = calcular_colunas_derivadas(df)
+    return df
+
+def aplicar_formatacao_excel():
+    """
+    Abre o arquivo Excel 'trades.xlsx' e aplica formatações:
+      - 'Data'          → formato 'DD/MM/YYYY'
+      - 'Ativo'         → texto normal
+      - 'Contratos'     → inteiro
+      - 'Lucro_Liquido' → moeda 'R$ #,##0.00'
+      - 'SaldoAcumulado', 'PicoAcumulado' → moeda 'R$ #,##0.00'
+      - 'Drawdown'      → porcentagem '0.00%'
+      - 'Resultado (%)' → porcentagem '0.00%'
+    """
+    if not os.path.exists(ARQUIVO_XLSX):
+        return
+
+    wb = load_workbook(ARQUIVO_XLSX)
+    ws = wb.active
+
+    # Cria um dict {nome_coluna: índice_coluna}
+    col_idx = {ws.cell(row=1, column=c).value: c for c in range(1, ws.max_column + 1)}
+
+    # 1) Formatar 'Data'
+    if 'Data' in col_idx:
+        for row in range(2, ws.max_row + 1):
+            ws.cell(row=row, column=col_idx['Data']).number_format = 'DD/MM/YYYY'
+
+    # 2) Formatar monetários
+    for header in ['Lucro_Liquido', 'SaldoAcumulado', 'PicoAcumulado']:
+        if header in col_idx:
+            for row in range(2, ws.max_row + 1):
+                ws.cell(row=row, column=col_idx[header]).number_format = 'R$ #,##0.00'
+
+    # 3) Formatar 'Drawdown' e 'Resultado (%)' como porcentagem
+    for header in ['Drawdown', 'Resultado (%)']:
+        if header in col_idx:
+            for row in range(2, ws.max_row + 1):
+                ws.cell(row=row, column=col_idx[header]).number_format = '0.00%'
+
+    wb.save(ARQUIVO_XLSX)
