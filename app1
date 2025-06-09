@@ -128,3 +128,19 @@ def aplicar_formatacao_excel():
                 ws.cell(row=row, column=col_idx[header]).number_format = '0.00%'
 
     wb.save(ARQUIVO_XLSX)
+
+def salvar_dados(df):
+    """
+    Recebe um DataFrame (já contendo as colunas base + derivadas)
+    e salva em CSV e XLSX, aplicando a formatação no Excel.
+    """
+    df_to_save = df.copy()
+    # Recria as colunas derivadas (caso tenham sido alteradas)
+    df_to_save = calcular_colunas_derivadas(df_to_save)
+
+    # 1) Salva em CSV
+    df_to_save.to_csv(ARQUIVO_CSV, index=False)
+    # 2) Salva em XLSX
+    df_to_save.to_excel(ARQUIVO_XLSX, index=False)
+    # 3) Aplica formatação no XLSX
+    aplicar_formatacao_excel()
