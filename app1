@@ -144,3 +144,53 @@ def salvar_dados(df):
     df_to_save.to_excel(ARQUIVO_XLSX, index=False)
     # 3) Aplica formatação no XLSX
     aplicar_formatacao_excel()
+
+# -------------------------------------------------------
+# MÓDULO 3: Funções de Inserção de Trades
+# -------------------------------------------------------
+def adicionar_trade(df, data_input, ativo, contratos, lucro):
+    """
+    Adiciona um trade ao DataFrame. Parâmetros:
+      - df          : DataFrame carregado por carregar_dados()
+      - data_input  : string no formato 'DD/MM' ou 'DD/MM/AAAA'
+      - ativo       : string ('WDO' ou 'WIN')
+      - contratos   : int (nº de contratos da operação)
+      - lucro       : float (lucro líquido, já com taxas descontadas)
+
+    Retorna o DataFrame recarregado com colunas derivadas atualizadas.
+    """
+    # 1) Converte data_input para datetime
+    try:
+        if len(data_input.split('/')) == 2:
+            # 'DD/MM' → acrescenta ano atual
+            ano_atual = datetime.now().year
+            data_str = f"{data_input}/{ano_atual}"
+            data_dt = datetime.strptime(data_str, "%d/%m/%Y")
+        else:
+            # 'DD/MM/AAAA'
+            data_dt = datetime.strptime(data_input, "%d/%m/%Y")
+    except ValueError:
+        st.error("Data inválida. Use DD/MM ou DD/MM/AAAA.")
+        return df
+
+    # 2) Cria um DataFrame temporário para o novo trade
+    novo_trade_df = pd.DataFrame([{
+        'Data': data_dt,
+        'Ativo': ativo,
+        'Contratos': int(contratos),
+        'Lucro_Liquido': float(lucro)
+    }])
+
+    # 3) Extrai apenas colunas base de 'df' (caso existam)
+    #    Isso evita warnings de concatenação com colunas derivadas
+    if set(['Data', 'Ativo', 'Contratos', 'Lucro_Liquido']).issubset(df.columns):
+        base_df = df[['Data', 'Ativo', 'Contratos', 'Lucro_Liquido']].copy()
+    else:
+        base_df = pd.DataFrame(columns=['Data', 'Ativo', 'Contratos', 'Lucro_Liquido'])
+
+    # 4) Concatena o base_df com o novo_trade_df
+    base_df = pd.concat([base_df, novo_trade_df], ignore_index=True)
+
+    # 5) Salva em disco (CSV + XLSX) e recarrega colunas derivadas
+    salvar_dados(base_df)
+    return carregar_dados()
