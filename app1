@@ -194,3 +194,54 @@ def adicionar_trade(df, data_input, ativo, contratos, lucro):
     # 5) Salva em disco (CSV + XLSX) e recarrega colunas derivadas
     salvar_dados(base_df)
     return carregar_dados()
+
+
+# -------------------------------------------------------
+# MÓDULO 4: Funções Estatísticas
+# -------------------------------------------------------
+def calcular_indicadores(df):
+    """
+    Retorna um dict com os principais indicadores de performance:
+      - Total de Trades
+      - Taxa de Acerto (%)
+      - Retorno Médio (R$)
+      - Expectância (R$)
+      - Profit Factor
+      - Sharpe Ratio
+      - Sortino Ratio
+
+    Se não houver dados, retorna None.
+    """
+    if df.empty:
+        return None
+
+    lucros = df['Lucro_Liquido']
+    ganhos = lucros[lucros > 0]
+    perdas = lucros[lucros < 0]
+
+    total = len(lucros)
+    acertos = len(ganhos)
+    erros = len(perdas)
+
+    ret_med = lucros.mean()
+    std = lucros.std() if total > 1 else 0
+
+    expect = (
+        ganhos.mean() * (acertos / total) +
+        perdas.mean() * (erros / total)
+    ) if total else 0
+
+    pf = ganhos.sum() / abs(perdas.sum()) if abs(perdas.sum()) > 0 else np.nan
+    sharpe = ret_med / std if std > 0 else np.nan
+    sortino = ret_med / perdas.std() if perdas.std() > 0 else np.nan
+    taxa = (acertos / total) * 100 if total else 0
+
+    return {
+        "Total Trades": total,
+        "Taxa de Acerto (%)": taxa,
+        "Retorno Médio (R$)": ret_med,
+        "Expectância (R$)": expect,
+        "Profit Factor": pf,
+        "Sharpe Ratio": sharpe,
+        "Sortino Ratio": sortino
+    }
