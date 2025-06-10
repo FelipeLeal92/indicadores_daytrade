@@ -355,3 +355,58 @@ if st.sidebar.button("➕ Registrar Trade"):
             st.sidebar.error("❌ Valor inválido para Lucro Líquido.")
     else:
         st.sidebar.warning("Preencha todos os campos: Data, Ativo e Lucro.")
+
+
+# -------------------------------------------------------
+# SECTION: Sidebar de Indicadores com Explicação
+# -------------------------------------------------------
+with st.sidebar.expander("📈 Indicadores", expanded=False):
+    indicadores = calcular_indicadores(df)
+    if indicadores:
+        for nome, valor in indicadores.items():
+            if isinstance(valor, (int, float, np.floating)):
+                st.metric(label=nome, value=f"{valor:,.2f}")
+            else:
+                st.metric(label=nome, value=str(valor))
+        st.markdown("**ℹ️ Faixas de Desempenho de Indicadores**")
+        st.markdown("""
+- **Taxa de Acerto** (Percentual de trades vencedores)      
+  - 🔴 Crítico: < 40%  
+  - 🟠 Ruim: 40% – 49%  
+  - 🟡 Moderado: 50% – 59%  
+  - 🟢 Bom: 60% – 69%  
+  - 🔵 Excelente: ≥ 70%
+
+- **Retorno Médio (R$)** (Ganho ou perda média por trade)  
+  - 🔴 Negativo: < 0  
+  - 🟡 Leve: 0 – 1  
+  - 🟢 Sólido: 1 – 2  
+  - 🔵 Excelente: > 2
+
+- **Expectância (R$)** (Lucro ou prejuízo esperado por operação)  
+  - 🔴 Negativa: < 0  
+  - 🟡 Neutra: 0 – 0.5  
+  - 🟢 Positiva: 0.5 – 1  
+  - 🔵 Excelente: > 1
+
+- **Profit Factor** (Razão entre o total ganho e o total perdido)  
+  - 🔴 Crítico: < 1  
+  - 🟡 Fraco: 1 – 1.5  
+  - 🟢 Bom: 1.5 – 2  
+  - 🔵 Excelente: > 2
+
+- **Sharpe Ratio** (Avalia se o retorno compensa o risco)  
+  - 🔴 Inaceitável: < 0.5  
+  - 🟡 Fraco: 0.5 – 1  
+  - 🟢 Bom: 1 – 2  
+  - 🔵 Excelente: > 2
+
+- **Sortino Ratio** (penaliza só a volatilidade negativa)  
+  - 🔴 Fraco: < 1  
+  - 🟡 Médio: 1 – 1.5  
+  - 🟢 Bom: 1.5 – 2  
+  - 🔵 Excelente: > 2
+        """)
+    else:
+        st.write("Sem dados para mostrar indicadores.")
+
