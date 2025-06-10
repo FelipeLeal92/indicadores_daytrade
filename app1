@@ -245,3 +245,71 @@ def calcular_indicadores(df):
         "Sharpe Ratio": sharpe,
         "Sortino Ratio": sortino
     }
+
+
+# -------------------------------------------------------
+# MÓDULO 5: Funções de Plotagem
+# -------------------------------------------------------
+def plot_curva_patrimonio(df):
+    """
+    Plota a curva de patrimônio (SaldoAcumulado) com:
+      - Linha de breakeven (y=0)
+      - Anotação do drawdown máximo
+    """
+    if df.empty:
+        st.warning("Não há dados para plotar curva de patrimônio.")
+        return
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(df["SaldoAcumulado"], label="Saldo Acumulado")
+    ax.axhline(0, color='gray', linestyle='--', label='Breakeven')
+
+    # Anota o drawdown máximo
+    max_dd = df["Drawdown"].min()
+    idx_max_dd = df["Drawdown"].idxmin()
+    ax.annotate(
+        f"Max Drawdown: {max_dd:.2f}%",
+        xy=(idx_max_dd, df.loc[idx_max_dd, "SaldoAcumulado"]),
+        xytext=(idx_max_dd, df["SaldoAcumulado"].max() * 0.5),
+        arrowprops=dict(facecolor='red', shrink=0.05)
+    )
+
+    ax.set_title("Curva de Patrimônio ao Longo dos Trades")
+    ax.set_xlabel("Índice de Trade")
+    ax.set_ylabel("R$")
+    ax.legend()
+    ax.grid(True)
+    st.pyplot(fig)
+
+def plot_drawdown(df):
+    """
+    Plota a evolução de Drawdown (%) ao longo dos trades.
+    """
+    if df.empty:
+        st.warning("Não há dados para plotar drawdown.")
+        return
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(df["Drawdown"], label="Drawdown (%)", color='red')
+    ax.set_title("Drawdown (%) ao Longo dos Trades")
+    ax.set_xlabel("Índice de Trade")
+    ax.set_ylabel("Drawdown (%)")
+    ax.legend()
+    ax.grid(True)
+    st.pyplot(fig)
+
+def plot_histograma(df):
+    """
+    Plota histograma dos valores de Lucro_Liquido (ou ProfitLoss).
+    """
+    if df.empty:
+        st.warning("Não há dados para plotar histograma.")
+        return
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.hist(df["Lucro_Liquido"], bins=10, edgecolor='black')
+    ax.set_title("Histograma de Retornos por Trade (P/L)")
+    ax.set_xlabel("P/L (R$)")
+    ax.set_ylabel("Frequência")
+    ax.grid(True)
+    st.pyplot(fig)
