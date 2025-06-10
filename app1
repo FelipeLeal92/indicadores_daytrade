@@ -313,3 +313,45 @@ def plot_histograma(df):
     ax.set_ylabel("Frequência")
     ax.grid(True)
     st.pyplot(fig)
+
+
+# -------------------------------------------------------
+# MÓDULO 6: Layout Principal do Streamlit
+# -------------------------------------------------------
+st.set_page_config(page_title="Painel de Controle de Trades", layout="wide")
+st.title("📊 Painel de Acompanhamento de Trades")
+
+# 1) Carrega o DataFrame (com colunas derivadas)
+df = carregar_dados()
+
+# -------------------------------------------------------
+# SECTION: Sidebar para Inserção de Novo Trade
+# -------------------------------------------------------
+st.sidebar.header("➕ Adicionar Trade (Novo)")
+
+# 1.1) Campo de Data (DD/MM ou DD/MM/AAAA)
+data_input = st.sidebar.text_input("Data (DD/MM ou DD/MM/AAAA)", "")
+
+# 1.2) Campo Ativo (lista suspensa)
+ativo_input = st.sidebar.selectbox("Ativo", ["WDO", "WIN"])
+
+# 1.3) Campo Quantidade de Contratos
+contratos_input = st.sidebar.number_input("Contratos", min_value=1, step=1, value=1)
+
+# 1.4) Campo Lucro Líquido (já liquido de taxas)
+lucro_input = st.sidebar.text_input("Lucro Líquido (ex: 62.70)", "")
+
+# 1.5) Botão para adicionar
+if st.sidebar.button("➕ Registrar Trade"):
+    # Verifica se todos os campos foram preenchidos
+    if data_input.strip() and ativo_input and lucro_input.strip():
+        try:
+            # Converte lucro para float (aceita vírgula ou ponto)
+            lucro_val = float(lucro_input.replace(",", "."))
+            # Chama a função que adiciona o trade
+            df = adicionar_trade(df, data_input, ativo_input, contratos_input, lucro_val)
+            st.sidebar.success("✅ Trade adicionado com sucesso!")
+        except ValueError:
+            st.sidebar.error("❌ Valor inválido para Lucro Líquido.")
+    else:
+        st.sidebar.warning("Preencha todos os campos: Data, Ativo e Lucro.")
