@@ -410,3 +410,40 @@ with st.sidebar.expander("📈 Indicadores", expanded=False):
     else:
         st.write("Sem dados para mostrar indicadores.")
 
+# -------------------------------------------------------
+# SECTION: Tabela de Histórico de Trades
+# -------------------------------------------------------
+st.subheader("🗂️ Histórico de Trades")
+
+if not df.empty:
+    df_exibir = df.copy()
+
+    # 1) Formatar 'Data' como 'DD/MM/YYYY' (sem horário)
+    df_exibir['Data'] = df_exibir['Data'].dt.strftime('%d/%m/%Y')
+
+    # 2) Formatar 'Drawdown' e 'Resultado (%)' como string percentual
+    df_exibir['Drawdown'] = df_exibir['Drawdown'].map(lambda x: f"{x:.2f}%")
+    df_exibir['Resultado (%)'] = df_exibir['Resultado (%)'].map(lambda x: f"{x:.2f}%")
+
+    # 3) Remover a coluna redundante 'ProfitLoss' se ela existir
+    if 'ProfitLoss' in df_exibir.columns:
+        df_exibir.drop(columns=['ProfitLoss'], inplace=True)
+
+    # 4) Exibir a tabela
+    st.dataframe(df_exibir, use_container_width=True)
+
+    # 5) Descrição das colunas em um expander
+    with st.expander("ℹ️ Descrição das Colunas"):
+        st.markdown("""
+- **Data**: Data em que o trade foi executado (formato DD/MM/AAAA).  
+- **Ativo**: Instrumento negociado (ex.: WDO ou WIN).  
+- **Contratos**: Quantidade de contratos negociados.  
+- **Lucro_Liquido**: Valor líquido ganho ou perdido na operação (já descontadas taxas).  
+- **SaldoAcumulado**: Soma cumulativa de todos os lucros líquidos até aquele trade.  
+- **PicoAcumulado**: Maior valor que o SaldoAcumulado atingiu até aquele ponto.  
+- **Drawdown**: Percentual de queda em relação ao PicoAcumulado (indica a maior perda até então).  
+- **Resultado (%)**: (Lucro_Liquido / SaldoAnterior) × 100, onde SaldoAnterior é o SaldoAcumulado antes deste trade.  
+        """)
+
+else:
+    st.write("Nenhum trade registrado ainda.")
