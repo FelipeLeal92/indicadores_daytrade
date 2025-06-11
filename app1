@@ -447,3 +447,29 @@ if not df.empty:
 
 else:
     st.write("Nenhum trade registrado ainda.")
+
+# -------------------------------------------------------
+# SECTION: Gráficos de Desempenho
+# -------------------------------------------------------
+st.subheader("📊 Gráficos de Desempenho")
+
+tipo_grafico = st.radio(
+    "Escolha qual gráfico exibir:",
+    ("Curva de Patrimônio", "Drawdown", "Histograma", "Todos")
+)
+
+if tipo_grafico == "Curva de Patrimônio":
+    plot_curva_patrimonio(df)
+elif tipo_grafico == "Drawdown":
+    plot_drawdown(df)
+elif tipo_grafico == "Histograma":
+    plot_histograma(df)
+else:  # Exibe todos de uma vez
+    plot_curva_patrimonio(df)
+    plot_drawdown(df)
+    plot_histograma(df)
+
+# -------------------------------------------------------pipreqs
+# FIM DO SCRIPT
+# -------------------------------------------------------
+# streamlit run app1.py
