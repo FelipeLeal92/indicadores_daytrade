@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import plotly.graph_objs as go
 import os
 from datetime import datetime
 from openpyxl import load_workbook
@@ -314,6 +315,60 @@ def plot_histograma(df):
     ax.grid(True)
     st.pyplot(fig)
 
+def plot_pie_ganho_por_ativo(df):
+    """
+    Gera um gráfico de pizza mostrando o percentual de ganho líquido por ativo.
+    Considera apenas ativos com resultado positivo.
+    """
+    df_ativos = df.groupby("Ativo")["Lucro_Liquido"].sum()
+    df_ativos = df_ativos[df_ativos > 0]  # opcional: remove ativos com prejuízo
+
+    if df_ativos.empty:
+        return None
+
+    fig, ax = plt.subplots()
+    ax.pie(df_ativos, labels=df_ativos.index, autopct='%1.1f%%', startangle=90)
+    ax.set_title("Distribuição de Lucro por Ativo")
+    ax.axis("equal")  # Mantém a pizza circular
+    return fig
+
+def plot_lucro_prejuizo_por_ativo(df):
+    """
+    Gera um gráfico de barras verticais mostrando lucro e prejuízo total por ativo.
+    """
+    import matplotlib.pyplot as plt
+
+    ativos = df["Ativo"].unique()
+    ativos = [a for a in ativos if a in ["WIN", "WDO"]]  # apenas WIN e WDO
+
+    if not ativos:
+        return None
+
+    lucro = []
+    prejuizo = []
+
+    for ativo in ativos:
+        df_ativo = df[df["Ativo"] == ativo]
+        lucro_total = df_ativo[df_ativo["Lucro_Liquido"] > 0]["Lucro_Liquido"].sum()
+        prejuizo_total = df_ativo[df_ativo["Lucro_Liquido"] < 0]["Lucro_Liquido"].sum()
+        lucro.append(lucro_total)
+        prejuizo.append(abs(prejuizo_total))  # valores positivos para gráfico
+
+    x = range(len(ativos))
+    largura = 0.35
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.bar([i - largura/2 for i in x], lucro, width=largura, label='Lucro', color='green')
+    ax.bar([i + largura/2 for i in x], prejuizo, width=largura, label='Prejuízo', color='red')
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(ativos)
+    ax.set_ylabel("Valor R$")
+    ax.set_title("Lucro vs Prejuízo por Ativo")
+    ax.legend()
+    ax.grid(True, axis='y')
+
+    return fig
 
 # -------------------------------------------------------
 # MÓDULO 6: Layout Principal do Streamlit
@@ -455,8 +510,12 @@ st.subheader("📊 Gráficos de Desempenho")
 
 tipo_grafico = st.radio(
     "Escolha qual gráfico exibir:",
-    ("Curva de Patrimônio", "Drawdown", "Histograma", "Todos")
+    ("Curva de Patrimônio", "Drawdown", "Histograma", "Pizza por Ativo", "Lucro vs Prejuízo por Ativo", "Todos")
 )
+
+# Recalcula os drawdowns só se ainda não estiverem no escopo
+if 'dd_events' not in globals():
+    dd_events = get_drawdown_events(df)
 
 if tipo_grafico == "Curva de Patrimônio":
     plot_curva_patrimonio(df)
@@ -464,10 +523,28 @@ elif tipo_grafico == "Drawdown":
     plot_drawdown(df)
 elif tipo_grafico == "Histograma":
     plot_histograma(df)
+elif tipo_grafico == "Pizza por Ativo":
+    fig_pizza = plot_pie_ganho_por_ativo(df)
+    if fig_pizza:
+        st.pyplot(fig_pizza)
+    else:
+        st.info("Nenhum lucro registrado para os ativos.")
+elif tipo_grafico == "Lucro vs Prejuízo por Ativo":
+    fig_barras = plot_lucro_prejuizo_por_ativo(df)
+    if fig_barras:
+        st.pyplot(fig_barras)
+    else:
+        st.info("Nenhum dado disponível para WIN ou WDO.")
 else:  # Exibe todos de uma vez
     plot_curva_patrimonio(df)
     plot_drawdown(df)
     plot_histograma(df)
+    fig_pizza = plot_pie_ganho_por_ativo(df)
+    if fig_pizza:
+        st.pyplot(fig_pizza)
+    fig_barras = plot_lucro_prejuizo_por_ativo(df)
+    if fig_barras:
+        st.pyplot(fig_barras)
 
 # -------------------------------------------------------pipreqs
 # FIM DO SCRIPT
